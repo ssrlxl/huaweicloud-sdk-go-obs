@@ -214,7 +214,7 @@ func WithHttpTransport(transport *http.Transport) configurer {
 }
 
 // WithHttpTransport is a configurer for ObsClient to set the customized http Transport.
-func WithDialContext(dialContext func(ctx context.Context, network, addr string) (net.Conn, error)) configurer {
+func WithHttpDialContext(dialContext func(ctx context.Context, network, addr string) (net.Conn, error)) configurer {
 	return func(conf *config) {
 		conf.dialContext = dialContext
 	}
