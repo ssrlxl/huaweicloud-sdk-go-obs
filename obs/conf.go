@@ -59,6 +59,7 @@ type config struct {
 	maxConnsPerHost      int
 	pemCerts             []byte
 	transport            *http.Transport
+	dialContext          func(ctx context.Context, network, addr string) (net.Conn, error)
 	roundTripper         http.RoundTripper
 	httpClient           *http.Client
 	ctx                  context.Context
@@ -209,6 +210,13 @@ func WithSecurityToken(securityToken string) configurer {
 func WithHttpTransport(transport *http.Transport) configurer {
 	return func(conf *config) {
 		conf.transport = transport
+	}
+}
+
+// WithHttpTransport is a configurer for ObsClient to set the customized http Transport.
+func WithDialContext(dialContext func(ctx context.Context, network, addr string) (net.Conn, error)) configurer {
+	return func(conf *config) {
+		conf.dialContext = dialContext
 	}
 }
 
@@ -373,6 +381,9 @@ func (conf *config) getTransport() error {
 			ResponseHeaderTimeout: time.Second * time.Duration(conf.headerTimeout),
 			IdleConnTimeout:       time.Second * time.Duration(conf.idleConnTimeout),
 			DisableKeepAlives:     conf.disableKeepAlive,
+		}
+		if conf.dialContext != nil {
+			conf.transport.DialContext = conf.dialContext
 		}
 		if conf.proxyURL != "" {
 			conf.transport.Proxy = conf.customProxyFromEnvironment
